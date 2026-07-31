@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#171334">
+<title>Impostor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night-1:#1a1638; --night-2:#2a2158;
+    --paper:#f3ead6; --ink:#2b2740; --ink-soft:#6d6787;
+    --text:#efeaff; --text-dim:#a49ecb;
+    --accent:#b9a4ff; --accent-deep:#8f78e0; --impostor:#e5476e;
+    --line:rgba(255,255,255,.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Sora',system-ui,sans-serif;color:var(--text);
+    background:radial-gradient(120% 90% at 50% -10%, var(--night-2), transparent 60%), var(--night-1);
+    background-attachment:fixed;-webkit-font-smoothing:antialiased;
+    overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
+  }
+  #app{position:relative;height:100dvh;height:100svh;display:flex;flex-direction:column;max-width:520px;margin:0 auto}
+
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;padding:26px 24px;overflow-y:auto}
+  .screen.active{display:flex;animation:in .4s ease both}
+  @keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  /* ---- Home ---- */
+  .brand{padding-top:26px}
+  .brand h1{font-size:56px;font-weight:800;letter-spacing:-.03em;line-height:.95;
+    background:linear-gradient(120deg,#fff,var(--accent) 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .brand p{color:var(--text-dim);font-size:15px;margin-top:10px;max-width:26ch;line-height:1.5}
+  .spacer{flex:1}
+  .count-label{font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);text-align:center;margin-bottom:14px}
+  .stepper{display:flex;align-items:center;gap:18px;justify-content:center}
+  .step-btn{width:64px;height:64px;flex:none;border-radius:20px;border:1px solid var(--line);
+    background:rgba(255,255,255,.05);color:var(--text);font-size:32px;font-weight:600;line-height:1;
+    cursor:pointer;font-family:inherit;transition:.15s;display:flex;align-items:center;justify-content:center}
+  .step-btn:active{transform:scale(.92);background:rgba(255,255,255,.1)}
+  .step-btn:disabled{opacity:.3}
+  .step-val{min-width:96px;text-align:center;font-size:60px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .step-val small{display:block;font-size:13px;font-weight:500;color:var(--text-dim);letter-spacing:0;margin-top:4px}
+
+  .btn{width:100%;border:none;border-radius:16px;padding:18px;font-size:17px;font-weight:700;font-family:inherit;
+    cursor:pointer;transition:transform .12s ease;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px}
+  .btn:active{transform:scale(.98)}
+  .btn--primary{background:linear-gradient(135deg,var(--accent),var(--accent-deep));color:#1a1240;box-shadow:0 12px 30px -12px var(--accent)}
+  .btn--ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+  .btn--danger{background:linear-gradient(135deg,#f26088,var(--impostor));color:#fff}
+  .btn:focus-visible,.step-btn:focus-visible,.note:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+
+  /* ---- Reveal ---- */
+  .top-line{text-align:center;padding-bottom:4px}
+  .top-line .who{font-size:24px;font-weight:800;letter-spacing:-.01em}
+  .top-line .who span{color:var(--accent)}
+  .hint{text-align:center;color:var(--text-dim);font-size:15px;font-weight:600;min-height:22px;margin-top:6px;transition:color .2s}
+  .stage{flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+
+  .note{position:relative;width:min(74vw,300px);aspect-ratio:1/1.16;border:none;padding:0;cursor:pointer;
+    background:transparent;font-family:inherit;-webkit-tap-highlight-color:transparent;
+    transition:transform .6s cubic-bezier(.18,.9,.24,1.04),filter .5s ease}
+  .note__paper{position:absolute;inset:0;overflow:hidden;border-radius:14px;
+    background:radial-gradient(125% 120% at 32% 22%, #f7f0df, #ece0c4 62%, #ddccaa);
+    box-shadow:0 26px 50px -18px rgba(0,0,0,.6), inset 0 0 0 1px rgba(120,95,50,.14);
+    transition:border-radius .6s cubic-bezier(.18,.9,.24,1.04),box-shadow .5s,background .4s}
+  .note__creases{position:absolute;inset:0;opacity:0;transition:opacity .5s;mix-blend-mode:multiply;
+    background:linear-gradient(112deg,transparent 28%,rgba(96,74,36,.16) 29%,transparent 31%),
+      linear-gradient(-58deg,transparent 46%,rgba(96,74,36,.14) 47%,transparent 49%),
+      linear-gradient(70deg,transparent 62%,rgba(96,74,36,.13) 63%,transparent 66%),
+      radial-gradient(circle at 24% 30%,rgba(80,60,26,.16),transparent 26%),
+      radial-gradient(circle at 74% 62%,rgba(80,60,26,.15),transparent 30%)}
+  .note__shine{position:absolute;inset:0;opacity:0;transition:opacity .5s;mix-blend-mode:screen;
+    background:linear-gradient(112deg,transparent 27%,rgba(255,250,235,.5) 29%,transparent 30%)}
+  .note__content{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:8px;padding:22px;text-align:center;opacity:0;transform:scale(.9);
+    transition:opacity .35s ease .12s,transform .45s cubic-bezier(.2,.9,.2,1.2) .12s}
+  .note__eyebrow{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .note__word{font-family:'Caveat',cursive;font-weight:700;color:var(--ink);font-size:clamp(40px,13vw,60px);line-height:1;word-break:break-word}
+  .note__sub{font-size:12.5px;color:var(--ink-soft);max-width:22ch;line-height:1.45;margin-top:4px}
+
+  .note.is-crumpled{transform:scale(.66) rotate(-5deg)}
+  .note.is-crumpled .note__paper{border-radius:44% 56% 52% 48% / 56% 44% 56% 44%;
+    box-shadow:0 16px 30px -14px rgba(0,0,0,.65),inset 0 0 24px rgba(90,66,26,.28)}
+  .note.is-crumpled .note__creases,.note.is-crumpled .note__shine{opacity:1}
+  .note.is-open .note__content{opacity:1;transform:none}
+  .note.is-impostor .note__paper{background:radial-gradient(125% 120% at 32% 22%, #fbecef, #f4d6dd 60%, #ecc0ca)}
+  .note.is-impostor .note__word{color:var(--impostor);font-family:'Sora',sans-serif;font-weight:800;
+    font-size:clamp(28px,9vw,40px);letter-spacing:.08em;border:3px solid var(--impostor);border-radius:10px;
+    padding:8px 16px;transform:rotate(-7deg);text-transform:uppercase;opacity:.92}
+  .note.is-impostor .note__sub{color:#a83654}
+
+  /* countdown bar */
+  .timer{height:6px;width:min(74vw,300px);margin:14px auto 0;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;opacity:0;transition:opacity .3s}
+  .timer.on{opacity:1}
+  .timer i{display:block;height:100%;width:100%;background:var(--accent);transform-origin:left;border-radius:99px}
+
+  /* ---- End / Result ---- */
+  .center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px}
+  .end-emoji{font-size:52px}
+  .end-title{font-size:34px;font-weight:800;letter-spacing:-.02em}
+  .end-sub{color:var(--text-dim);font-size:15px;max-width:24ch;line-height:1.5}
+  .result-word{background:linear-gradient(135deg,#f6efdd,#e6d5b3);color:var(--ink);border-radius:20px;padding:22px;text-align:center;width:100%}
+  .rw-label{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .rw-word{font-family:'Caveat',cursive;font-weight:700;font-size:clamp(44px,15vw,62px);line-height:1;margin-top:2px}
+  .rw-cat{font-size:13px;color:var(--ink-soft);margin-top:6px}
+  .ir-name{font-size:28px;font-weight:800;color:var(--impostor);margin:2px 0 12px}
+
+  @media (prefers-reduced-motion:reduce){*{transition-duration:.12s!important;animation-duration:.01ms!important}.note.is-crumpled{transform:scale(.68)}}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HOME -->
+  <section class="screen active" id="screen-home">
+    <div class="brand">
+      <h1>Impostor</h1>
+      <p>Uno no conoce la palabra. Pásense el teléfono y descúbranlo.</p>
+    </div>
+    <div class="spacer"></div>
+    <div class="count-label">Jugadores</div>
+    <div class="stepper">
+      <button class="step-btn" id="pMinus" aria-label="Menos">−</button>
+      <div class="step-val"><span id="pVal">4</span></div>
+      <button class="step-btn" id="pPlus" aria-label="Más">+</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn--primary" id="startBtn">Empezar</button>
+  </section>
+
+  <!-- REVEAL -->
+  <section class="screen" id="screen-reveal">
+    <div class="top-line"><div class="who" id="who">Jugador <span>1</span></div></div>
+    <p class="hint" id="hint">Toca el papel para ver tu palabra</p>
+    <div class="stage">
+      <button class="note is-crumpled" id="note" aria-label="Abrir el papel">
+        <div class="note__paper">
+          <div class="note__creases"></div>
+          <div class="note__shine"></div>
+          <div class="note__content">
+            <span class="note__eyebrow" id="noteEyebrow">Tu palabra</span>
+            <span class="note__word" id="noteWord">—</span>
+            <span class="note__sub" id="noteSub"></span>
+          </div>
+        </div>
+      </button>
+    </div>
+    <div class="timer" id="timer"><i id="timerBar"></i></div>
+  </section>
+
+  <!-- END -->
+  <section class="screen" id="screen-end">
+    <div class="center">
+      <div class="end-emoji">🃏</div>
+      <div class="end-title">Todos vieron su papel</div>
+      <div class="end-sub">Por turnos digan una pista sobre la palabra. Descubran al impostor.</div>
+    </div>
+    <button class="btn btn--danger" id="revealBtn">Revelar impostor</button>
+    <button class="btn btn--ghost" id="againBtn">Nueva ronda</button>
+    <button class="btn btn--ghost" id="homeBtn">Cambiar jugadores</button>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" id="screen-result">
+    <div class="center">
+      <div class="end-sub" style="margin-bottom:2px">El impostor era</div>
+      <div class="ir-name" id="irName">Jugador 3</div>
+      <div class="result-word">
+        <div class="rw-label">La palabra era</div>
+        <div class="rw-word" id="rwWord">Pizza</div>
+        <div class="rw-cat" id="rwCat">Comida</div>
+      </div>
+    </div>
+    <button class="btn btn--primary" id="again2Btn">Otra ronda</button>
+    <button class="btn btn--ghost" id="home2Btn">Cambiar jugadores</button>
+  </section>
+
+</div>
+
+<script>
+"use strict";
+
+const CATS = {
+  Comida:["Pizza","Sushi","Hamburguesa","Tacos","Helado","Ceviche","Empanada","Chocolate","Ramen","Churros","Lasaña","Tamales"],
+  Animales:["León","Pingüino","Elefante","Delfín","Cocodrilo","Jirafa","Pulpo","Águila","Canguro","Tiburón","Camaleón","Perezoso"],
+  Lugares:["Playa","Aeropuerto","Hospital","Escuela","Cine","Gimnasio","Castillo","Volcán","Desierto","Estadio","Museo","Selva"],
+  Objetos:["Paraguas","Reloj","Almohada","Tijeras","Linterna","Guitarra","Escoba","Espejo","Brújula","Candado","Sombrilla","Mochila"],
+  Deportes:["Fútbol","Tenis","Natación","Boxeo","Ciclismo","Ajedrez","Surf","Esquí","Vóleibol","Karate","Escalada","Béisbol"],
+  Profesiones:["Doctor","Bombero","Chef","Astronauta","Policía","Profesor","Piloto","Payaso","Detective","Científico","Actor","Panadero"]
+};
+const SECONDS = 4;
+
+const state = { players:4, word:"", cat:"", impostor:0, current:0, busy:false };
+const $ = id => document.getElementById(id);
+const rand = n => Math.floor(Math.random()*n);
+const pick = a => a[rand(a.length)];
+
+function show(s){
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+  $("screen-"+s).classList.add("active");
+}
+function renderHome(){
+  $("pVal").textContent = state.players;
+  $("pMinus").disabled = state.players<=3;
+  $("pPlus").disabled  = state.players>=12;
+}
+
+function startRound(){
+  const cat = pick(Object.keys(CATS));
+  state.cat = cat;
+  state.word = pick(CATS[cat]);
+  state.impostor = rand(state.players);
+  state.current = 0;
+  showPlayer();
+  show("reveal");
+}
+
+function showPlayer(){
+  state.busy = false;
+  const note = $("note");
+  note.classList.add("is-crumpled");
+  note.classList.remove("is-open","is-impostor");
+  $("who").innerHTML = `Jugador <span>${state.current+1}</span>`;
+  $("hint").textContent = "Toca el papel para ver tu palabra";
+  $("hint").style.color = "";
+  $("timer").classList.remove("on");
+  $("timerBar").style.transition = "none";
+  $("timerBar").style.transform = "scaleX(1)";
+
+  const isImp = state.current === state.impostor;
+  if(isImp){
+    $("noteEyebrow").textContent = "Tu rol";
+    $("noteWord").textContent = "Impostor";
+    $("noteSub").textContent = "Disimula. Pista: " + state.cat + ".";
+  } else {
+    $("noteEyebrow").textContent = "Tu palabra";
+    $("noteWord").textContent = state.word;
+    $("noteSub").textContent = "";
+  }
+}
+
+function openNote(){
+  if(state.busy) return;
+  state.busy = true;
+  const note = $("note");
+  note.classList.toggle("is-impostor", state.current===state.impostor);
+  note.classList.remove("is-crumpled");
+  note.classList.add("is-open");
+  $("hint").textContent = "Se cierra sola…";
+
+  // barra de tiempo
+  const bar = $("timerBar");
+  $("timer").classList.add("on");
+  requestAnimationFrame(()=>{
+    bar.style.transition = "transform "+SECONDS+"s linear";
+    bar.style.transform = "scaleX(0)";
+  });
+
+  setTimeout(closeAndNext, SECONDS*1000);
+}
+
+function closeAndNext(){
+  const note = $("note");
+  note.classList.remove("is-open");
+  note.classList.add("is-crumpled");
+  $("timer").classList.remove("on");
+  setTimeout(()=>{
+    state.current++;
+    if(state.current < state.players) showPlayer();
+    else show("end");
+  }, 480);
+}
+
+function goResult(){
+  $("irName").textContent = "Jugador " + (state.impostor+1);
+  $("rwWord").textContent = state.word;
+  $("rwCat").textContent = state.cat;
+  show("result");
+}
+
+$("pMinus").onclick = ()=>{ if(state.players>3){state.players--;renderHome();} };
+$("pPlus").onclick  = ()=>{ if(state.players<12){state.players++;renderHome();} };
+$("startBtn").onclick = startRound;
+$("note").onclick = openNote;
+$("revealBtn").onclick = goResult;
+$("againBtn").onclick = startRound;
+$("again2Btn").onclick = startRound;
+$("homeBtn").onclick = ()=>show("home");
+$("home2Btn").onclick = ()=>show("home");
+
+renderHome();
+</script>
+</body>
+</html>
